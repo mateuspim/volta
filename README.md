@@ -39,6 +39,25 @@ A terminal UI for per-channel (L/R) volume and balance control using PulseAudio 
 
 ## Installation
 
+**Pre-built binary (latest):**
+
+```bash
+# amd64
+curl -L https://github.com/mateuspim/volta/releases/download/latest/volta-linux-amd64 -o volta
+chmod +x volta && sudo mv volta /usr/local/bin/
+
+# arm64
+curl -L https://github.com/mateuspim/volta/releases/download/latest/volta-linux-arm64 -o volta
+chmod +x volta && sudo mv volta /usr/local/bin/
+```
+
+**Specific version:**
+
+```bash
+curl -L https://github.com/mateuspim/volta/releases/download/v1.0.0/volta-linux-amd64 -o volta
+chmod +x volta && sudo mv volta /usr/local/bin/
+```
+
 **From source:**
 
 ```bash
@@ -46,12 +65,6 @@ git clone git@github.com:mateuspim/volta.git
 cd volta
 make build
 # binary at ./bin/volta
-```
-
-**Run directly:**
-
-```bash
-make run
 ```
 
 ## Controls
