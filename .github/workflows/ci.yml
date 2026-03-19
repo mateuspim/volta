@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: [dev]
+    tags: ["v*"]
+  pull_request:
+    branches: [master]
+
+jobs:
+  build:
+    name: Build & Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+          cache: true
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Test
+        run: go test ./...
+
+      - name: Build
+        run: go build ./cmd/volta
+
+  release:
+    name: Release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+          cache: true
+
+      - name: Build binaries
+        run: |
+          GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o volta-linux-amd64 ./cmd/volta
+          GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" -o volta-linux-arm64 ./cmd/volta
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            volta-linux-amd64
+            volta-linux-arm64
