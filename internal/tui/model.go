@@ -14,6 +14,7 @@ type Model struct {
 	sinkIdx int
 	locked  bool
 	err     error
+	width   int
 }
 
 func New() Model {

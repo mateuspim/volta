@@ -11,6 +11,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		return m.handleKey(msg)
+	case tea.WindowSizeMsg:
+		m.width = msg.Width
 	case sinksLoadedMsg:
 		m.sinks = []audio.Sink(msg)
 		m.sinkIdx = 0

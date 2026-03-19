@@ -7,10 +7,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-const (
-	barWidth = 24
-	maxVol   = 150
-)
+const maxVol = 150
 
 var (
 	titleStyle = lipgloss.NewStyle().
@@ -100,8 +97,14 @@ func (m Model) View() string {
 	}
 
 	// Volume bars
-	leftBar := renderBar(sink.Volume.Left)
-	rightBar := renderBar(sink.Volume.Right)
+	// box border(2) + padding(4) + label(3) + space(1) + space(1) + vol(4) + %(1) = 16
+	bw := m.width - 16
+	if bw < 10 {
+		bw = 10
+	}
+
+	leftBar := renderBar(sink.Volume.Left, bw)
+	rightBar := renderBar(sink.Volume.Right, bw)
 
 	leftLine := fmt.Sprintf("%s %s %s%%",
 		labelStyle.Render("L"),
@@ -115,7 +118,7 @@ func (m Model) View() string {
 	)
 
 	// Balance
-	balLine := renderBalance(sink.Balance())
+	balLine := renderBalance(sink.Balance(), bw)
 
 	// Help grid — 2 columns: [key] [desc]
 	helpGrid := renderHelp()
@@ -124,10 +127,10 @@ func (m Model) View() string {
 		"",
 		"  " + sinkNav + "  " + sinkIdx + badges,
 		"",
-		"  " + leftLine,
-		"  " + rightLine,
+		leftLine,
+		rightLine,
 		"",
-		"  " + balLine,
+		balLine,
 		"",
 		helpGrid,
 		"",
@@ -139,11 +142,10 @@ func (m Model) View() string {
 	return boxStyle.Render(header + body)
 }
 
-func renderBar(vol int) string {
-	// 0-100% fills first barWidth blocks, 101-150% overflows in red
-	normalFill := vol * barWidth / 100
-	if normalFill > barWidth {
-		normalFill = barWidth
+func renderBar(vol, bw int) string {
+	normalFill := vol * bw / 100
+	if normalFill > bw {
+		normalFill = bw
 	}
 	if normalFill < 0 {
 		normalFill = 0
@@ -151,22 +153,21 @@ func renderBar(vol int) string {
 
 	overFill := 0
 	if vol > 100 {
-		overFill = (vol - 100) * barWidth / 50
-		if overFill > barWidth-normalFill {
-			overFill = barWidth - normalFill
+		overFill = (vol - 100) * bw / 50
+		if overFill > bw-normalFill {
+			overFill = bw - normalFill
 		}
 	}
 
-	empty := barWidth - normalFill - overFill
+	empty := bw - normalFill - overFill
 
 	return filledStyle.Render(strings.Repeat("█", normalFill)) +
 		overStyle.Render(strings.Repeat("█", overFill)) +
 		emptyStyle.Render(strings.Repeat("░", empty))
 }
 
-func renderBalance(balance int) string {
-	// balance: -150..+150, track matches barWidth exactly
-	total := barWidth
+func renderBalance(balance, bw int) string {
+	total := bw
 	center := total / 2
 
 	// Map balance to position within half-width
