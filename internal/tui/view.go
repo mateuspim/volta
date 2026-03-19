@@ -225,8 +225,8 @@ func renderHelp() string {
 
 	type entry struct{ k, d string }
 	rows := [][]entry{
-		{{"↑ / ↓", "L vol  +5 / -5"}, {"K / J", "R vol  +5 / -5"}},
-		{{"← / →", "balance  ±3"}, {"tab", "cycle sinks"}},
+		{{"k / j", "L vol  +5 / -5"}, {"K / J", "R vol  +5 / -5"}},
+		{{"h / l", "balance  ±3"}, {"tab", "cycle sinks"}},
 		{{"L", "lock  L = R"}, {"r", "reset to 100%"}},
 		{{"m", "mute toggle"}, {"q", "quit"}},
 	}

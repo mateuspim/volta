@@ -19,28 +19,28 @@ type keyMap struct {
 
 var keys = keyMap{
 	Up: key.NewBinding(
-		key.WithKeys("up", "k"),
-		key.WithHelp("↑/k", "L vol up"),
+		key.WithKeys("k", "up"),
+		key.WithHelp("k", "L vol +5"),
 	),
 	Down: key.NewBinding(
-		key.WithKeys("down", "j"),
-		key.WithHelp("↓/j", "L vol down"),
+		key.WithKeys("j", "down"),
+		key.WithHelp("j", "L vol -5"),
 	),
 	RightUp: key.NewBinding(
 		key.WithKeys("K"),
-		key.WithHelp("K", "R vol up"),
+		key.WithHelp("K", "R vol +5"),
 	),
 	RightDown: key.NewBinding(
 		key.WithKeys("J"),
-		key.WithHelp("J", "R vol down"),
+		key.WithHelp("J", "R vol -5"),
 	),
 	Left: key.NewBinding(
-		key.WithKeys("left", "h"),
-		key.WithHelp("←/h", "balance left"),
+		key.WithKeys("h", "left"),
+		key.WithHelp("h", "balance -3"),
 	),
 	Right: key.NewBinding(
-		key.WithKeys("right", "l"),
-		key.WithHelp("→/l", "balance right"),
+		key.WithKeys("l", "right"),
+		key.WithHelp("l", "balance +3"),
 	),
 	Tab: key.NewBinding(
 		key.WithKeys("tab"),
