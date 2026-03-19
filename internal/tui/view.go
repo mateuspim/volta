@@ -96,9 +96,15 @@ func (m Model) View() string {
 		badges += "  " + lockStyle.Render("⚿ LOCKED")
 	}
 
-	// Volume bars
-	// box border(2) + padding(4) + label(3) + space(1) + space(1) + vol(4) + %(1) = 16
-	bw := m.width - 16
+	// Fix box to terminal width minus 2 so right border is always visible.
+	// inner = boxWidth - border(2) - padding(4)
+	// bar   = inner - indent(2) - label(3) - spaces(2) - vol(4) - %(1) = inner - 12
+	boxWidth := m.width - 2
+	if boxWidth < 40 {
+		boxWidth = 40
+	}
+	inner := boxWidth - 6
+	bw := inner - 12
 	if bw < 10 {
 		bw = 10
 	}
@@ -127,10 +133,10 @@ func (m Model) View() string {
 		"",
 		"  " + sinkNav + "  " + sinkIdx + badges,
 		"",
-		leftLine,
-		rightLine,
+		"  " + leftLine,
+		"  " + rightLine,
 		"",
-		balLine,
+		"  " + balLine,
 		"",
 		helpGrid,
 		"",
@@ -139,7 +145,7 @@ func (m Model) View() string {
 	header := titleStyle.Render("volta")
 	body := strings.Join(lines, "\n")
 
-	return boxStyle.Render(header + body)
+	return boxStyle.Width(boxWidth).Render(header + body)
 }
 
 func renderBar(vol, bw int) string {
