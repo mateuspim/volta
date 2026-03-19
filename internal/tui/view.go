@@ -7,11 +7,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-const (
-	barWidth = 24
-	maxVol   = 150
-	balWidth = 11 // half-width of balance bar
-)
+const maxVol = 150
 
 var (
 	titleStyle = lipgloss.NewStyle().
@@ -100,9 +96,21 @@ func (m Model) View() string {
 		badges += "  " + lockStyle.Render("⚿ LOCKED")
 	}
 
-	// Volume bars
-	leftBar := renderBar(sink.Volume.Left)
-	rightBar := renderBar(sink.Volume.Right)
+	// Fix box to terminal width minus 2 so right border is always visible.
+	// inner = boxWidth - border(2) - padding(4)
+	// bar   = inner - indent(2) - label(3) - spaces(2) - vol(4) - %(1) = inner - 12
+	boxWidth := m.width - 2
+	if boxWidth < 40 {
+		boxWidth = 40
+	}
+	inner := boxWidth - 6
+	bw := inner - 12
+	if bw < 10 {
+		bw = 10
+	}
+
+	leftBar := renderBar(sink.Volume.Left, bw)
+	rightBar := renderBar(sink.Volume.Right, bw)
 
 	leftLine := fmt.Sprintf("%s %s %s%%",
 		labelStyle.Render("L"),
@@ -115,12 +123,11 @@ func (m Model) View() string {
 		volNumStyle.Render(fmt.Sprintf("%d", sink.Volume.Right)),
 	)
 
-	// Balance
-	balLine := renderBalance(sink.Balance())
+	// Balance — two lines: track + label below right-aligned under vol%
+	balBlock := renderBalance(sink.Balance(), bw)
 
-	// Help text
-	help1 := helpStyle.Render("↑↓ L vol   K/J R vol   ←→ balance   tab next")
-	help2 := helpStyle.Render("L lock   r reset   m mute   q quit")
+	// Help grid — 2 columns: [key] [desc]
+	helpGrid := renderHelp(bw)
 
 	lines := []string{
 		"",
@@ -129,24 +136,21 @@ func (m Model) View() string {
 		"  " + leftLine,
 		"  " + rightLine,
 		"",
-		"  " + balLine,
-		"",
-		"  " + help1,
-		"  " + help2,
+		balBlock,
+		helpGrid,
 		"",
 	}
 
 	header := titleStyle.Render("volta")
 	body := strings.Join(lines, "\n")
 
-	return boxStyle.Render(header + body)
+	return boxStyle.Width(boxWidth).Render(header + body)
 }
 
-func renderBar(vol int) string {
-	// 0-100% fills first barWidth blocks, 101-150% overflows in red
-	normalFill := vol * barWidth / 100
-	if normalFill > barWidth {
-		normalFill = barWidth
+func renderBar(vol, bw int) string {
+	normalFill := vol * bw / 100
+	if normalFill > bw {
+		normalFill = bw
 	}
 	if normalFill < 0 {
 		normalFill = 0
@@ -154,31 +158,30 @@ func renderBar(vol int) string {
 
 	overFill := 0
 	if vol > 100 {
-		overFill = (vol - 100) * barWidth / 50
-		if overFill > barWidth-normalFill {
-			overFill = barWidth - normalFill
+		overFill = (vol - 100) * bw / 50
+		if overFill > bw-normalFill {
+			overFill = bw - normalFill
 		}
 	}
 
-	empty := barWidth - normalFill - overFill
+	empty := bw - normalFill - overFill
 
 	return filledStyle.Render(strings.Repeat("█", normalFill)) +
 		overStyle.Render(strings.Repeat("█", overFill)) +
 		emptyStyle.Render(strings.Repeat("░", empty))
 }
 
-func renderBalance(balance int) string {
-	// balance: -150..+150, display on 2*balWidth+1 track
-	total := 2*balWidth + 1
-	center := balWidth
+func renderBalance(balance, bw int) string {
+	total := bw
+	center := total / 2
 
-	// Map balance to position
-	pos := balance * balWidth / 150
-	if pos > balWidth {
-		pos = balWidth
+	half := center
+	pos := balance * half / 150
+	if pos > half {
+		pos = half
 	}
-	if pos < -balWidth {
-		pos = -balWidth
+	if pos < -half {
+		pos = -half
 	}
 	markerPos := center + pos
 
@@ -196,19 +199,65 @@ func renderBalance(balance int) string {
 		}
 	}
 
-	var balLabel string
+	// label right-aligned in Width(6) appended directly after track:
+	// "BAL "(4) + track(bw) + label(6) = bw+10 — matches slider line width
+	var bareLabel string
+	var labelColor lipgloss.Color
 	switch {
 	case balance == 0:
-		balLabel = lipgloss.NewStyle().Foreground(lipgloss.Color("#10B981")).Render("L = R")
+		bareLabel = "L = R"
+		labelColor = "#10B981"
 	case balance > 0:
-		balLabel = lipgloss.NewStyle().Foreground(lipgloss.Color("#A78BFA")).Render(fmt.Sprintf("+%d R", balance))
+		bareLabel = fmt.Sprintf("+%d R", balance)
+		labelColor = "#A78BFA"
 	default:
-		balLabel = lipgloss.NewStyle().Foreground(lipgloss.Color("#A78BFA")).Render(fmt.Sprintf("%d L", -balance))
+		bareLabel = fmt.Sprintf("%d L", -balance)
+		labelColor = "#A78BFA"
 	}
+	styledLabel := lipgloss.NewStyle().Foreground(labelColor).Width(6).Align(lipgloss.Right).Render(bareLabel)
 
-	return fmt.Sprintf("%s %s  %s",
+	return "  " + fmt.Sprintf("%s %s%s",
 		labelStyle.Render("BAL"),
 		strings.Join(bar, ""),
-		balLabel,
+		styledLabel,
 	)
+}
+
+func renderHelp(bw int) string {
+	const keyW = 7
+	// match slider content width (bw+10) after "  " indent:
+	// keyW + descW + "  │  "(5) + keyW + descW = bw+10 → descW = (bw-9)/2
+	descW := (bw - 9) / 2
+	if descW < 12 {
+		descW = 12
+	}
+	sepW := bw + 10
+
+	keyStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#C4B5FD")).
+		Bold(true).
+		Width(keyW)
+	descStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#6B7280")).
+		Width(descW)
+	divider := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#374151")).
+		Render("│")
+
+	type entry struct{ k, d string }
+	rows := [][]entry{
+		{{"k / j", "L vol  +5 / -5"}, {"K / J", "R vol  +5 / -5"}},
+		{{"h / l", "balance  ±3"}, {"← / →", "prev / next sink"}},
+		{{"L", "lock  L = R"}, {"r", "reset to 100%"}},
+		{{"m", "mute toggle"}, {"q", "quit"}},
+	}
+
+	sep := lipgloss.NewStyle().Foreground(lipgloss.Color("#4B5563")).Render(strings.Repeat("─", sepW))
+	lines := []string{"  " + sep}
+	for _, row := range rows {
+		left := keyStyle.Render(row[0].k) + descStyle.Render(row[0].d)
+		right := keyStyle.Render(row[1].k) + descStyle.Render(row[1].d)
+		lines = append(lines, "  "+left+"  "+divider+"  "+right)
+	}
+	return strings.Join(lines, "\n")
 }

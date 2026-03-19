@@ -4,16 +4,25 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/pym/volta/internal/audio"
+	"github.com/pym/volta/internal/state"
 )
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		return m.handleKey(msg)
+	case tea.WindowSizeMsg:
+		m.width = msg.Width
 	case sinksLoadedMsg:
 		m.sinks = []audio.Sink(msg)
-		if m.sinkIdx >= len(m.sinks) {
-			m.sinkIdx = 0
+		m.sinkIdx = 0
+		if saved := state.Load().LastSink; saved != "" {
+			for i, s := range m.sinks {
+				if s.Name == saved {
+					m.sinkIdx = i
+					break
+				}
+			}
 		}
 	case errMsg:
 		m.err = msg
@@ -24,6 +33,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	switch {
 	case key.Matches(msg, keys.Quit):
+		if len(m.sinks) > 0 {
+			state.Save(state.State{LastSink: m.sinks[m.sinkIdx].Name})
+		}
 		return m, tea.Quit
 	}
 
@@ -34,11 +46,13 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	sink := m.sinks[m.sinkIdx]
 
 	switch {
-	case key.Matches(msg, keys.Tab):
+	case key.Matches(msg, keys.SinkNext):
 		m.sinkIdx = (m.sinkIdx + 1) % len(m.sinks)
+		state.Save(state.State{LastSink: m.sinks[m.sinkIdx].Name})
 
-	case key.Matches(msg, keys.ShiftTab):
+	case key.Matches(msg, keys.SinkPrev):
 		m.sinkIdx = (m.sinkIdx - 1 + len(m.sinks)) % len(m.sinks)
+		state.Save(state.State{LastSink: m.sinks[m.sinkIdx].Name})
 
 	case key.Matches(msg, keys.Lock):
 		m.locked = !m.locked

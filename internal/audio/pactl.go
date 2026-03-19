@@ -25,8 +25,9 @@ func ListSinks() ([]Sink, error) {
 }
 
 func SetVolume(sinkName string, left, right int) error {
-	vol := fmt.Sprintf("%d%%/%d%%", left, right)
-	if err := exec.Command("pactl", "set-sink-volume", sinkName, vol).Run(); err != nil {
+	l := fmt.Sprintf("%d%%", left)
+	r := fmt.Sprintf("%d%%", right)
+	if err := exec.Command("pactl", "set-sink-volume", sinkName, l, r).Run(); err != nil {
 		return fmt.Errorf("pactl set-sink-volume: %w", err)
 	}
 	return nil
