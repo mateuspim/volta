@@ -127,7 +127,7 @@ func (m Model) View() string {
 	balLine := renderBalance(sink.Balance(), bw)
 
 	// Help grid — 2 columns: [key] [desc]
-	helpGrid := renderHelp()
+	helpGrid := renderHelp(bw)
 
 	lines := []string{
 		"",
@@ -218,14 +218,23 @@ func renderBalance(balance, bw int) string {
 	)
 }
 
-func renderHelp() string {
+func renderHelp(bw int) string {
+	const keyW = 7
+	// slider content after "  " = bw+10, help row must match:
+	// keyW + descW + "  │  "(5) + keyW + descW = bw+10 → descW = (bw-9)/2
+	descW := (bw - 9) / 2
+	if descW < 12 {
+		descW = 12
+	}
+	sepW := 2*(keyW+descW) + 5
+
 	keyStyle := lipgloss.NewStyle().
 		Foreground(lipgloss.Color("#C4B5FD")).
 		Bold(true).
-		Width(7)
+		Width(keyW)
 	descStyle := lipgloss.NewStyle().
 		Foreground(lipgloss.Color("#6B7280")).
-		Width(16)
+		Width(descW)
 	divider := lipgloss.NewStyle().
 		Foreground(lipgloss.Color("#374151")).
 		Render("│")
@@ -238,8 +247,7 @@ func renderHelp() string {
 		{{"m", "mute toggle"}, {"q", "quit"}},
 	}
 
-	// row width: keyW(7) + descW(16) + "  │  "(5) + keyW(7) + descW(16) = 51
-	sep := lipgloss.NewStyle().Foreground(lipgloss.Color("#4B5563")).Render(strings.Repeat("─", 51))
+	sep := lipgloss.NewStyle().Foreground(lipgloss.Color("#4B5563")).Render(strings.Repeat("─", sepW))
 	lines := []string{"  " + sep}
 	for _, row := range rows {
 		left := keyStyle.Render(row[0].k) + descStyle.Render(row[0].d)
