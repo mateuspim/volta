@@ -9,8 +9,8 @@ type keyMap struct {
 	RightDown key.Binding
 	Left      key.Binding
 	Right     key.Binding
-	Tab       key.Binding
-	ShiftTab  key.Binding
+	SinkNext  key.Binding
+	SinkPrev  key.Binding
 	Lock      key.Binding
 	Reset     key.Binding
 	Mute      key.Binding
@@ -19,11 +19,11 @@ type keyMap struct {
 
 var keys = keyMap{
 	Up: key.NewBinding(
-		key.WithKeys("k", "up"),
+		key.WithKeys("k"),
 		key.WithHelp("k", "L vol +5"),
 	),
 	Down: key.NewBinding(
-		key.WithKeys("j", "down"),
+		key.WithKeys("j"),
 		key.WithHelp("j", "L vol -5"),
 	),
 	RightUp: key.NewBinding(
@@ -35,20 +35,20 @@ var keys = keyMap{
 		key.WithHelp("J", "R vol -5"),
 	),
 	Left: key.NewBinding(
-		key.WithKeys("h", "left"),
+		key.WithKeys("h"),
 		key.WithHelp("h", "balance -3"),
 	),
 	Right: key.NewBinding(
-		key.WithKeys("l", "right"),
+		key.WithKeys("l"),
 		key.WithHelp("l", "balance +3"),
 	),
-	Tab: key.NewBinding(
-		key.WithKeys("tab"),
-		key.WithHelp("tab", "next sink"),
+	SinkNext: key.NewBinding(
+		key.WithKeys("tab", "down"),
+		key.WithHelp("↓/tab", "next sink"),
 	),
-	ShiftTab: key.NewBinding(
-		key.WithKeys("shift+tab"),
-		key.WithHelp("shift+tab", "prev sink"),
+	SinkPrev: key.NewBinding(
+		key.WithKeys("shift+tab", "up"),
+		key.WithHelp("↑/shift+tab", "prev sink"),
 	),
 	Lock: key.NewBinding(
 		key.WithKeys("L"),

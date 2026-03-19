@@ -44,11 +44,11 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	sink := m.sinks[m.sinkIdx]
 
 	switch {
-	case key.Matches(msg, keys.Tab):
+	case key.Matches(msg, keys.SinkNext):
 		m.sinkIdx = (m.sinkIdx + 1) % len(m.sinks)
 		state.Save(state.State{LastSink: m.sinks[m.sinkIdx].Name})
 
-	case key.Matches(msg, keys.ShiftTab):
+	case key.Matches(msg, keys.SinkPrev):
 		m.sinkIdx = (m.sinkIdx - 1 + len(m.sinks)) % len(m.sinks)
 		state.Save(state.State{LastSink: m.sinks[m.sinkIdx].Name})
 
