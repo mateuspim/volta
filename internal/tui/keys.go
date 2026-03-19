@@ -43,12 +43,12 @@ var keys = keyMap{
 		key.WithHelp("l", "balance +3"),
 	),
 	SinkNext: key.NewBinding(
-		key.WithKeys("tab", "down"),
-		key.WithHelp("↓/tab", "next sink"),
+		key.WithKeys("tab", "right"),
+		key.WithHelp("→/tab", "next sink"),
 	),
 	SinkPrev: key.NewBinding(
-		key.WithKeys("shift+tab", "up"),
-		key.WithHelp("↑/shift+tab", "prev sink"),
+		key.WithKeys("shift+tab", "left"),
+		key.WithHelp("←/shift+tab", "prev sink"),
 	),
 	Lock: key.NewBinding(
 		key.WithKeys("L"),
