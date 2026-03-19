@@ -10,7 +10,6 @@ import (
 const (
 	barWidth = 24
 	maxVol   = 150
-	balWidth = 11 // half-width of balance bar
 )
 
 var (
@@ -166,17 +165,18 @@ func renderBar(vol int) string {
 }
 
 func renderBalance(balance int) string {
-	// balance: -150..+150, display on 2*balWidth+1 track
-	total := 2*balWidth + 1
-	center := balWidth
+	// balance: -150..+150, track matches barWidth exactly
+	total := barWidth
+	center := total / 2
 
-	// Map balance to position
-	pos := balance * balWidth / 150
-	if pos > balWidth {
-		pos = balWidth
+	// Map balance to position within half-width
+	half := center
+	pos := balance * half / 150
+	if pos > half {
+		pos = half
 	}
-	if pos < -balWidth {
-		pos = -balWidth
+	if pos < -half {
+		pos = -half
 	}
 	markerPos := center + pos
 
@@ -231,7 +231,8 @@ func renderHelp() string {
 		{{"m", "mute toggle"}, {"q", "quit"}},
 	}
 
-	sep := lipgloss.NewStyle().Foreground(lipgloss.Color("#4B5563")).Render(strings.Repeat("─", 46))
+	// row width: keyW(7) + descW(16) + "  │  "(5) + keyW(7) + descW(16) = 51
+	sep := lipgloss.NewStyle().Foreground(lipgloss.Color("#4B5563")).Render(strings.Repeat("─", 51))
 	lines := []string{"  " + sep}
 	for _, row := range rows {
 		left := keyStyle.Render(row[0].k) + descStyle.Render(row[0].d)
