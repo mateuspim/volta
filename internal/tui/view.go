@@ -118,9 +118,8 @@ func (m Model) View() string {
 	// Balance
 	balLine := renderBalance(sink.Balance())
 
-	// Help text
-	help1 := helpStyle.Render("↑↓ L vol   K/J R vol   ←→ balance   tab next")
-	help2 := helpStyle.Render("L lock   r reset   m mute   q quit")
+	// Help grid — 2 columns: [key] [desc]
+	helpGrid := renderHelp()
 
 	lines := []string{
 		"",
@@ -131,8 +130,7 @@ func (m Model) View() string {
 		"",
 		"  " + balLine,
 		"",
-		"  " + help1,
-		"  " + help2,
+		helpGrid,
 		"",
 	}
 
@@ -211,4 +209,34 @@ func renderBalance(balance int) string {
 		strings.Join(bar, ""),
 		balLabel,
 	)
+}
+
+func renderHelp() string {
+	keyStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#C4B5FD")).
+		Bold(true).
+		Width(7)
+	descStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#6B7280")).
+		Width(16)
+	divider := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#374151")).
+		Render("│")
+
+	type entry struct{ k, d string }
+	rows := [][]entry{
+		{{"↑ / ↓", "L vol  +5 / -5"}, {"K / J", "R vol  +5 / -5"}},
+		{{"← / →", "balance  ±3"}, {"tab", "cycle sinks"}},
+		{{"L", "lock  L = R"}, {"r", "reset to 100%"}},
+		{{"m", "mute toggle"}, {"q", "quit"}},
+	}
+
+	sep := lipgloss.NewStyle().Foreground(lipgloss.Color("#4B5563")).Render(strings.Repeat("─", 46))
+	lines := []string{"  " + sep}
+	for _, row := range rows {
+		left := keyStyle.Render(row[0].k) + descStyle.Render(row[0].d)
+		right := keyStyle.Render(row[1].k) + descStyle.Render(row[1].d)
+		lines = append(lines, "  "+left+"  "+divider+"  "+right)
+	}
+	return strings.Join(lines, "\n")
 }
