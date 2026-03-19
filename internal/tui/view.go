@@ -123,11 +123,11 @@ func (m Model) View() string {
 		volNumStyle.Render(fmt.Sprintf("%d", sink.Volume.Right)),
 	)
 
-	// Balance
-	balLine := renderBalance(sink.Balance(), bw)
+	// Balance — two lines: track + label below right-aligned under vol%
+	balBlock := renderBalance(sink.Balance(), bw)
 
 	// Help grid — 2 columns: [key] [desc]
-	helpGrid := renderHelp(inner)
+	helpGrid := renderHelp(bw)
 
 	lines := []string{
 		"",
@@ -136,7 +136,7 @@ func (m Model) View() string {
 		"  " + leftLine,
 		"  " + rightLine,
 		"",
-		"  " + balLine,
+		balBlock,
 		"",
 		helpGrid,
 		"",
@@ -176,7 +176,6 @@ func renderBalance(balance, bw int) string {
 	total := bw
 	center := total / 2
 
-	// Map balance to position within half-width
 	half := center
 	pos := balance * half / 150
 	if pos > half {
@@ -201,32 +200,39 @@ func renderBalance(balance, bw int) string {
 		}
 	}
 
-	var balLabel string
+	// track line: same indent as slider lines
+	trackLine := "  " + fmt.Sprintf("%s %s", labelStyle.Render("BAL"), strings.Join(bar, ""))
+
+	// label line: right-aligned to sit under the vol% column
+	// slider content width after "  " = bw+10, so label fills that same width
+	var bareLabel string
+	var labelColor lipgloss.Color
 	switch {
 	case balance == 0:
-		balLabel = lipgloss.NewStyle().Foreground(lipgloss.Color("#10B981")).Render("L = R")
+		bareLabel = "L = R"
+		labelColor = "#10B981"
 	case balance > 0:
-		balLabel = lipgloss.NewStyle().Foreground(lipgloss.Color("#A78BFA")).Render(fmt.Sprintf("+%d R", balance))
+		bareLabel = fmt.Sprintf("+%d R", balance)
+		labelColor = "#A78BFA"
 	default:
-		balLabel = lipgloss.NewStyle().Foreground(lipgloss.Color("#A78BFA")).Render(fmt.Sprintf("%d L", -balance))
+		bareLabel = fmt.Sprintf("%d L", -balance)
+		labelColor = "#A78BFA"
 	}
+	styledLabel := lipgloss.NewStyle().Foreground(labelColor).Render(bareLabel)
+	labelLine := "  " + lipgloss.NewStyle().Width(bw+10).Align(lipgloss.Right).Render(styledLabel)
 
-	return fmt.Sprintf("%s %s  %s",
-		labelStyle.Render("BAL"),
-		strings.Join(bar, ""),
-		balLabel,
-	)
+	return trackLine + "\n" + labelLine
 }
 
-func renderHelp(inner int) string {
+func renderHelp(bw int) string {
 	const keyW = 7
-	// fill full inner width minus "  " indent(2):
-	// keyW + descW + "  │  "(5) + keyW + descW = inner-2 → descW = (inner-2-5-2*keyW)/2
-	descW := (inner - 2 - 5 - 2*keyW) / 2
+	// match slider content width (bw+10) after "  " indent:
+	// keyW + descW + "  │  "(5) + keyW + descW = bw+10 → descW = (bw-9)/2
+	descW := (bw - 9) / 2
 	if descW < 12 {
 		descW = 12
 	}
-	sepW := inner - 2
+	sepW := bw + 10
 
 	keyStyle := lipgloss.NewStyle().
 		Foreground(lipgloss.Color("#C4B5FD")).
