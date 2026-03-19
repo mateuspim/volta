@@ -127,7 +127,7 @@ func (m Model) View() string {
 	balLine := renderBalance(sink.Balance(), bw)
 
 	// Help grid — 2 columns: [key] [desc]
-	helpGrid := renderHelp(bw)
+	helpGrid := renderHelp(inner)
 
 	lines := []string{
 		"",
@@ -218,15 +218,15 @@ func renderBalance(balance, bw int) string {
 	)
 }
 
-func renderHelp(bw int) string {
+func renderHelp(inner int) string {
 	const keyW = 7
-	// slider content after "  " = bw+10, help row must match:
-	// keyW + descW + "  │  "(5) + keyW + descW = bw+10 → descW = (bw-9)/2
-	descW := (bw - 9) / 2
+	// fill full inner width minus "  " indent(2):
+	// keyW + descW + "  │  "(5) + keyW + descW = inner-2 → descW = (inner-2-5-2*keyW)/2
+	descW := (inner - 2 - 5 - 2*keyW) / 2
 	if descW < 12 {
 		descW = 12
 	}
-	sepW := 2*(keyW+descW) + 5
+	sepW := inner - 2
 
 	keyStyle := lipgloss.NewStyle().
 		Foreground(lipgloss.Color("#C4B5FD")).
