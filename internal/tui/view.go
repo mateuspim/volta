@@ -137,7 +137,6 @@ func (m Model) View() string {
 		"  " + rightLine,
 		"",
 		balBlock,
-		"",
 		helpGrid,
 		"",
 	}
@@ -200,11 +199,8 @@ func renderBalance(balance, bw int) string {
 		}
 	}
 
-	// track line: same indent as slider lines
-	trackLine := "  " + fmt.Sprintf("%s %s", labelStyle.Render("BAL"), strings.Join(bar, ""))
-
-	// label line: right-aligned to sit under the vol% column
-	// slider content width after "  " = bw+10, so label fills that same width
+	// label right-aligned in Width(6) appended directly after track:
+	// "BAL "(4) + track(bw) + label(6) = bw+10 — matches slider line width
 	var bareLabel string
 	var labelColor lipgloss.Color
 	switch {
@@ -218,10 +214,13 @@ func renderBalance(balance, bw int) string {
 		bareLabel = fmt.Sprintf("%d L", -balance)
 		labelColor = "#A78BFA"
 	}
-	styledLabel := lipgloss.NewStyle().Foreground(labelColor).Render(bareLabel)
-	labelLine := "  " + lipgloss.NewStyle().Width(bw+10).Align(lipgloss.Right).Render(styledLabel)
+	styledLabel := lipgloss.NewStyle().Foreground(labelColor).Width(6).Align(lipgloss.Right).Render(bareLabel)
 
-	return trackLine + "\n" + labelLine
+	return "  " + fmt.Sprintf("%s %s%s",
+		labelStyle.Render("BAL"),
+		strings.Join(bar, ""),
+		styledLabel,
+	)
 }
 
 func renderHelp(bw int) string {
