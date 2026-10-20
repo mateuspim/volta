@@ -1,5 +1,7 @@
 # volta
 
+**Looking for the Omarchy bar plugin?** See [Volta for Omarchy](https://github.com/mateuspim/omarchy-volta). This repository is the standalone terminal application.
+
 A terminal UI for per-channel (L/R) volume and balance control using PulseAudio / PipeWire (`pactl`).
 
 ```
